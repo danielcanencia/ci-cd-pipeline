@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rango</title>
+    </head>
+    <body>
+        <div>
+        {% if category %}
+            <h1>{{ category.name }}</hi>
+            {% if pages %}
+            <u1>
+                {% for page in pages %}
+                <li><a href = "{{ page.url }}">{{ page.title }}</a></li>
+                {% endfor %}
+            </u1>
+            {% else %}
+                <br>
+                <strong>No pages currently in category.</strong>
+            {% endif %}
+        {% else %}
+            The specified category does not exist!
+        {% endif %}    
+
+        {% if user.is_authenticated %}
+            <br><a href = "/rango/category/{{category.slug}}/add_page/">AddPage</a> <br/>
+        {% endif %}
+
+        </div>
+    </body>
+</html>
