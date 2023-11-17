@@ -29,7 +29,7 @@ SECRET_KEY = '+a8fpssej7yq*fm^5j2q#rj+14_w9htq$g%)#d812!zl9t=nv='
 DEBUG = True
 
 ALLOWED_HOSTS = [u'damp-spire-50239.herokuapp.com/',
-                 '192.168.1.112', 'localhost', '127.0.0.1']
+                 'tango.with.django', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'tango_with_django_project.wsgi.application'
 
 
 # Database
-DATABASE_URL = 'postgres://alumnodb:alumnodb@localhost:5432/psi'
+DATABASE_URL = 'postgres://alumnodb:alumnodb@172.17.0.1:5432/psi'
 
 DATABASES = {}
 if os.getenv('SQLITE', False):
