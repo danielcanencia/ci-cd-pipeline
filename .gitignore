@@ -1,3 +1,13 @@
+# Python
 *.pyc
 staticfiles
 uploads
+
+# Terraform
+*.tfstate.lock.info
+*.tfstate.backup
+*.tfstate
+*.lock.hcl
+*.log
+.terraform
+
