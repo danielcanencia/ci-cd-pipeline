@@ -31,6 +31,7 @@ provider "aws" {
 }
 
 
+
 module "ec2_module" {
     source = "./modules/ec2_module"
     providers = {
@@ -38,20 +39,7 @@ module "ec2_module" {
     }
 
     // One map per instance to create
-    for_each = {
-        docker-slave    = {
-            ami_value       = var.ami_values[0]
-            instance_type   = var.instance_types[0]
-            instance_state  = var.instance_states[0]
-            tag_name        = var.tag_names[0]
-        }
-        jenkins-master  = {
-            ami_value       = var.ami_values[1]
-            instance_type   = var.instance_types[1]
-            instance_state  = var.instance_states[1]
-            tag_name        = var.tag_names[1]
-        }
-    }
+    for_each = local.containers
 
     // Values to pass to the aws_instance resource
     ami_value       = each.value.ami_value
