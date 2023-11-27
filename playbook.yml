@@ -1,0 +1,107 @@
+---
+
+- hosts: "{{ lookup('ansible.builtin.env', 'DOCKERSLAVE_HOSTNAME') }}"
+  become: yes
+
+  pre_tasks:
+    - name: "Install postgresql"
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - postgresql
+        - postgresql-contrib
+        - python3-psycopg2
+
+    - name: "Install docker"
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+      with_items:
+        - ca-certificates
+        - curl
+        - gnupg
+
+    - name: "Add the docker gpg key"
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: "Add the docker repository"
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: "Update apt and install docker"
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+
+    - name: "Install pip"
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+      become: yes
+
+    - name: "Copy the requirements file"
+      ansible.builtin.copy:
+        src: "{{ lookup('ansible.builtin.env', 'REQUIREMENTS_PATH') }}"
+        dest: "{{ lookup('ansible.builtin.env', 'REQUIREMENTS_DEST') }}"
+
+    - name: "Install python packages"
+      ansible.builtin.pip:
+        requirements: "{{ lookup('ansible.builtin.env', 'REQUIREMENTS_DEST') }}"
+        extra_args: --use-pep517
+        executable: pip3
+      become: yes
+  tasks:
+    - name: "Enable and start postgresql service"
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: "Install acl"
+      ansible.builtin.apt:
+        name: acl
+        state: latest
+        update_cache: true
+
+    - name: "Create database user"
+      community.postgresql.postgresql_user:
+        name: "{{ lookup('ansible.builtin.env', 'DB_USER') }}"
+        password: "{{ lookup('ansible.builtin.env', 'DB_PASSWORD') }}"
+        state: present
+      become: yes
+      become_user: postgres
+
+    - name: "Create database"
+      community.postgresql.postgresql_db:
+        name: "{{ lookup('ansible.builtin.env', 'DB_NAME') }}"
+        owner: "{{ lookup('ansible.builtin.env', 'DB_USER') }}"
+        state: present
+      become: yes
+      become_user: postgres
+
+    - name: "Get python version"
+      ansible.builtin.shell: |
+        version=$(psql --version | awk '{ print $3 }')
+        echo "${version%%.*}"
+      register: python_version
+
+    - name: "Accept traffic from the docker network IP address"
+      ansible.builtin.lineinfile:
+        dest: "/etc/postgresql/{{ python_version.stdout }}/main/pg_hba.conf"
+        insertafter: "^local"
+        firstmatch: true
+        line: "{{ item }}"
+        state: present
+      with_items:
+        - "host all all all 172.17.01/16 trust"
+
