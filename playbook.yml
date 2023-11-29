@@ -4,6 +4,10 @@
   become: yes
 
   pre_tasks:
+    - name: "Update packages"
+      ansible.builtin.apt:
+        update_cache: yes
+
     - name: "Install postgresql"
       ansible.builtin.apt:
         name: "{{ item }}"
@@ -12,12 +16,14 @@
         - postgresql
         - postgresql-contrib
         - python3-psycopg2
+        - python3.11-dev
+        - libpq-dev
+        - libjpeg8-dev
 
     - name: "Install docker"
       ansible.builtin.apt:
         name: "{{ item }}"
         state: latest
-        update_cache: yes
       with_items:
         - ca-certificates
         - curl
@@ -42,6 +48,18 @@
         - docker-ce
         - docker-ce-cli
         - containerd.io
+
+    - name: "Configure docker"
+      ansible.builtin.shell: |
+        # Give current user docker permissions
+        usermod -a -G docker "{{ lookup('ansible.builtin.env', 'USER') }}"
+        systemctl restart docker
+        # Fix docker socket permissions
+        chmod 666 /var/run/docker.sock
+        # Bind tango.with.django hostname to docker ip in /etc/hosts
+        export DOCKER_IP=$(ip addr show eth0 | grep 'inet ' | awk '{print $2}' | cut -f1 -d'/')
+        sh -c 'echo "${DOCKER_IP} tango.with.django" >> /etc/hosts'
+      become: yes
 
     - name: "Install pip"
       ansible.builtin.apt:
@@ -89,19 +107,19 @@
       become: yes
       become_user: postgres
 
-    - name: "Get python version"
+    - name: "Get postgresql version"
       ansible.builtin.shell: |
         version=$(psql --version | awk '{ print $3 }')
         echo "${version%%.*}"
-      register: python_version
+      register: psql_version
 
     - name: "Accept traffic from the docker network IP address"
       ansible.builtin.lineinfile:
-        dest: "/etc/postgresql/{{ python_version.stdout }}/main/pg_hba.conf"
+        dest: "/etc/postgresql/{{ psql_version.stdout }}/main/pg_hba.conf"
         insertafter: "^local"
         firstmatch: true
         line: "{{ item }}"
         state: present
       with_items:
-        - "host all all all 172.17.01/16 trust"
+        - "host all all 172.17.01/16 trust"
 
