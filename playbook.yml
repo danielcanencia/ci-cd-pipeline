@@ -6,16 +6,11 @@
   pre_tasks:
     - name: "Update packages"
       ansible.builtin.apt:
-        update_cache: yes
-
-    - name: "Install postgresql"
-      ansible.builtin.apt:
         name: "{{ item }}"
         state: present
+        update_cache: yes
       with_items:
         - postgresql
-        - postgresql-contrib
-        - python3-psycopg2
         - python3.11-dev
         - libpq-dev
         - libjpeg8-dev
@@ -67,18 +62,11 @@
         state: present
       become: yes
 
-    - name: "Copy the requirements file"
-      ansible.builtin.copy:
-        src: "{{ lookup('ansible.builtin.env', 'REQUIREMENTS_PATH') }}"
-        dest: "{{ lookup('ansible.builtin.env', 'REQUIREMENTS_DEST') }}"
-
-    - name: "Install python packages"
+    - name: "Install psycopg2"
       ansible.builtin.pip:
-        requirements: "{{ lookup('ansible.builtin.env', 'REQUIREMENTS_DEST') }}"
-        extra_args: --use-pep517
+        name: psycopg2
         executable: pip3
-      become: yes
-  tasks:
+
     - name: "Enable and start postgresql service"
       ansible.builtin.service:
         name: postgresql
@@ -90,6 +78,17 @@
         name: acl
         state: latest
         update_cache: true
+
+  tasks:
+    - name:
+        "Create postgresql remote_tmp directory (fixes warning)]\n
+        DESC [fixes warning: Module remote_tmp /home/db2inst1/.ansible/tmp
+        did not exist and was created with a mode of 0700, ...]"
+      ansible.builtin.shell: |
+        mkdir -p /var/lib/postgresql/.ansible/tmp
+        chown postgres:postgres /var/lib/postgresql/.ansible/tmp
+        chmod 744 /var/lib/postgresql/.ansible/tmp
+      become: yes
 
     - name: "Create database user"
       community.postgresql.postgresql_user:
