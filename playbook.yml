@@ -135,3 +135,8 @@
       with_items:
         - "listen_addresses = 'localhost, 172.17.0.1'"
 
+    - name: "Restart postgresql service"
+      ansible.builtin.service:
+        name: postgresql
+        state: restarted
+
