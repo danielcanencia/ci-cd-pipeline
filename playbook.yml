@@ -84,8 +84,12 @@
         "Create postgresql remote_tmp directory (fixes warning)]\n
         DESC [fixes warning: Module remote_tmp /home/db2inst1/.ansible/tmp
         did not exist and was created with a mode of 0700, ...]"
+      ansible.builtin.file:
+        path: /var/lib/postgresql/.ansible/tmp
+        state: directory
+
+    - name: "Modify remote_tmp directory owner and permissions"
       ansible.builtin.shell: |
-        mkdir -p /var/lib/postgresql/.ansible/tmp
         chown postgres:postgres /var/lib/postgresql/.ansible/tmp
         chmod 744 /var/lib/postgresql/.ansible/tmp
       become: yes
