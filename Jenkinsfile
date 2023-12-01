@@ -1,8 +1,26 @@
+node {
+    stage('Checkout') {
+        checkout scm
+    }
+    stage('Provision docker slave container') {
+        cd terraform
+        terraform init && terraform apply
+    }
+
+
+    stage('Destroy created resources') {
+        terraform destroy
+    }
+}
+
 node('dockerSlave') {
     environment {
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
     stage('Checkout') {
+        // Clone the specific revision who triggers this pipeline
+        // checkout scm
+
         checkout([$class: 'GitSCM', branches: [[name: 'jenkins-pipeline']],
             userRemoteConfigs: [[credentialsId: '036a1b28-48ee-4c59-8ab1-388370a0e8d6',
                                  url: 'https://github.com/danielcanencia/ci-cd-pipeline.git']]])
