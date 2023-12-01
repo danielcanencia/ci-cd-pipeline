@@ -94,6 +94,7 @@
       community.postgresql.postgresql_user:
         name: "{{ lookup('ansible.builtin.env', 'DB_USER') }}"
         password: "{{ lookup('ansible.builtin.env', 'DB_PASSWORD') }}"
+        role_attr_flags: "CREATEDB"
         state: present
       become: yes
       become_user: postgres
@@ -121,4 +122,12 @@
         state: present
       with_items:
         - "host all all 172.17.01/16 trust"
+
+    - name: "Listen to docker network"
+      ansible.builtin.lineinfile:
+        dest: "/etc/postgresql/{{ psql_version.stdout }}/main/postgresql.conf"
+        line: "{{ item }}"
+        state: present
+      with_items:
+        - "listen_addresses = 'localhost, 172.17.0.1'"
 
