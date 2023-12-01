@@ -1,7 +1,9 @@
 retry(2) {
     node('docker-agent') {
-        withEnv(['DOCKERSLAVE_HOSTNAME=localhost, DB_NAME=tango',
-                 'DB_USER=tangouser, DB_PASSWORD=tangouser']) {
+        withEnv(['DOCKERSLAVE_HOSTNAME=local',
+                 'DB_NAME=tango',
+                 'DB_USER=tangouser',
+                 'DB_PASSWORD=tangouser']) {
             stage('Install git') {
                 sh '''
                 sudo apt-get update
@@ -19,16 +21,14 @@ retry(2) {
                 sudo apt-get install -y ansible
                 
                 # Specify requirements.txt paths
-                export REQUIREMENTS_PATH="requirements.txt"
-                export REQUIREMENTS_DEST="${HOME}/requirements.txt"
-                
-                # Create custom inventory to allow ansible connection to localhost
-                cat << EOF > inventory
-                [all]
-                localhost ansible_connection=local
-                EOF
+                export REQUIREMENTS_PATH=requirements.txt
+                export REQUIREMENTS_DEST=${HOME}/requirements.txt
 
-                ansible-playbook -i inventory playbook.yml
+                # Create custom inventory to allow ansible connection to localhost
+                echo "[local]" > inventory.yaml
+                echo "localhost ansible_connection=local" >> inventory.yaml
+                
+                ansible-playbook -i inventory.yaml playbook.yml
                 '''
             }
             stage('Build Test Docker Image') {
@@ -40,7 +40,6 @@ retry(2) {
             stage('Run Tests') {
                 sh '''
                 echo "Execute Test Modules"
-                # Add input network rule $EC2_PORT:$DOCKER_PORT
                 docker run --rm -p 8010:8000 danielcanenciagarcia/tango_with_django-test:${BUILD_NUMBER}
                 '''
             }
