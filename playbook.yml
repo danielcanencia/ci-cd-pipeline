@@ -87,12 +87,8 @@
       ansible.builtin.file:
         path: /var/lib/postgresql/.ansible/tmp
         state: directory
-
-    - name: "Modify remote_tmp directory owner and permissions"
-      ansible.builtin.shell: |
-        chown postgres:postgres /var/lib/postgresql/.ansible/tmp
-        chmod 744 /var/lib/postgresql/.ansible/tmp
-      become: yes
+        owner: postgres
+        mode: 744
 
     - name: "Create database user"
       community.postgresql.postgresql_user:
