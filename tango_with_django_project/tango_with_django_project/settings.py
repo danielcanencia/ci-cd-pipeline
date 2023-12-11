@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'tango_with_django_project.wsgi.application'
 
 
 # Database
-DATABASE_URL = 'postgres://tangouser:tangouser@172.17.0.1:5432/tango'
+DATABASE_URL = 'postgres://tangouser:tangouser@postgres.default.svc.cluster.local:5432/tango'
 
 DATABASES = {}
 if os.getenv('SQLITE', False):

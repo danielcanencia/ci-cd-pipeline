@@ -122,6 +122,7 @@
         state: present
       with_items:
         - "host all all 172.17.01/16 trust"
+        - "host all all postgres.default.svc.cluster.local trust"
 
     - name: "Listen to docker network"
       ansible.builtin.lineinfile:
@@ -129,7 +130,7 @@
         line: "{{ item }}"
         state: present
       with_items:
-        - "listen_addresses = 'localhost, 172.17.0.1'"
+        - "listen_addresses = 'localhost, postgres.default.svc.cluster.local, 172.17.0.1'"
 
     - name: "Restart postgresql service"
       ansible.builtin.service:
