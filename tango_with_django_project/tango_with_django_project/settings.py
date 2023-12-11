@@ -78,8 +78,11 @@ WSGI_APPLICATION = 'tango_with_django_project.wsgi.application'
 
 
 # Database
-DATABASE_URL = 'postgres://tangouser:tangouser@postgres.default.svc.cluster.local:5432/tango'
-
+if os.getenv('K8S_PORT') is None:
+    DATABASE_URL = 'postgres://tangouser:tangouser@postgres.default.svc.cluster.local:5432/tango'
+else:
+    DATABASE_URL = 'postgres://tangouser:tangouser@postgres.default.svc.cluster.local:' + str(os.getenv('K8S_PORT')) + '/tango'
+    
 DATABASES = {}
 if os.getenv('SQLITE', False):
     DATABASES['default'] = {
