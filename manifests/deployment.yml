@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tango-with-django
+  labels:
+    app: tango-with-django
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tango-with-django
+  template:
+    metadata:
+      labels:
+        app: tango-with-django
+    spec:
+      containers:
+      - name: tango-with-django
+        image: danielcanenciagarcia/tango_with_django:160
+        ports:
+        - containerPort: 8080
+
